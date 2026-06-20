@@ -1,0 +1,33 @@
+---
+# update-servers.yml
+# Ansible playbook to update Linux servers (Debian/Ubuntu and RHEL/CentOS families)
+
+- name: Update Linux servers
+  hosts: all
+  become: true
+  vars:
+    reboot_if_required: true
+    reboot_timeout: 600
+
+  tasks:
+
+    # ---------- Debian / Ubuntu ----------
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Upgrade all apt packages
+      apt:
+        upgrade: dist
+        autoremove: true
+        autoclean: true
+      when: ansible_os_family == "Debian"
+      register: apt_upgrade
+
+    - name: Check if reboot is required (Debian/Ubuntu)
+      stat:
+        path: /var/run/reboot-required
+      register: debian_reboot_required
+      when: ansible_os_family == "Debian"
